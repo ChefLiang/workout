@@ -1,1 +1,41 @@
+name: GPX Import
 
+on:
+  push:
+    paths:
+      - 'gpx/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  parse-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run GPX parser
+        run: python scripts/parse_gpx.py
+
+      - name: Commit updated data files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json tracks.json gpx/processed/ || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "auto: import GPX data [skip ci]"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
