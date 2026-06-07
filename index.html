@@ -187,12 +187,16 @@
 </div>
 
 <div class="main-title" id="mainTitle" onclick="editTitle()" title="Click to edit (max 80 chars)" data-i18n-title="titleEditHint" role="button" tabindex="0">WORKOUT.LOG</div>
-<div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-  <button class="btn-export btn-lang" id="langToggle" onclick="toggleLang()" title="Switch language" data-i18n-title="langSwitchTitle">中文</button>
-  <button class="btn-export" onclick="exportHTML()" title="Save as standalone HTML" data-i18n="exportHtml" data-i18n-title="exportTitle">Export HTML</button>
-  <button class="btn-export" onclick="exportDataJSON()" title="Download data.json for GitHub upload" style="border-color:#3ba87a;color:#3ba87a;">Export data.json</button>
-  <button class="btn-export" onclick="syncToGitHub()" title="Sync data to GitHub" style="border-color:#e07a30;color:#e07a30;">Sync</button>
-  <button class="btn-export" onclick="resetGithubToken()" title="Reset GitHub Token" style="border-color:#888;color:#888;font-size:11px;">🔑</button>
+<div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:16px;position:relative;">
+  <button class="btn-menu-toggle" onclick="toggleMenu()" title="Menu" style="background:none;border:1px solid #555;color:#d8dae0;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:16px;line-height:1;">⋯</button>
+  <div id="menuDropdown" class="menu-dropdown" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:#22242e;border:1px solid #33363f;border-radius:8px;padding:6px 0;min-width:180px;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.4);">
+    <div class="menu-item" onclick="toggleLang();toggleMenu()" style="padding:8px 16px;cursor:pointer;font-size:13px;color:#d8dae0;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#2a2d38'" onmouseout="this.style.background='transparent'"><span>🌐</span><span id="menuLangLabel">中文</span></div>
+    <div class="menu-item" onclick="syncToGitHub();toggleMenu()" style="padding:8px 16px;cursor:pointer;font-size:13px;color:#e07a30;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#2a2d38'" onmouseout="this.style.background='transparent'"><span>🔄</span><span>Sync to GitHub</span></div>
+    <div class="menu-item" onclick="exportHTML();toggleMenu()" style="padding:8px 16px;cursor:pointer;font-size:13px;color:#d8dae0;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#2a2d38'" onmouseout="this.style.background='transparent'"><span>📤</span><span>Export HTML</span></div>
+    <div class="menu-item" onclick="exportDataJSON();toggleMenu()" style="padding:8px 16px;cursor:pointer;font-size:13px;color:#3ba87a;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#2a2d38'" onmouseout="this.style.background='transparent'"><span>📥</span><span>Export data.json</span></div>
+    <div style="margin:4px 12px;border-top:1px solid #33363f;"></div>
+    <div class="menu-item" onclick="resetGithubToken();toggleMenu()" style="padding:8px 16px;cursor:pointer;font-size:13px;color:#888;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#2a2d38'" onmouseout="this.style.background='transparent'"><span>🔑</span><span>Reset Token</span></div>
+  </div>
 </div>
 
 <div id="statsCards" class="stats"><div class="card"><div class="stat-lbl">Yearly Goal</div><div class="stat-val" style="font-size:18px;">126.0<span style="font-size:11px;color:#888;">/<span class="goal-val" onclick="event.stopPropagation();editGoal()" title="Click to change goal">800</span> km</span></div><div style="background:#2a2d38;border-radius:4px;height:5px;margin-top:6px;"><div style="background:#e07a30;height:100%;border-radius:4px;width:16%;"></div></div><div class="stat-sub" style="color:#888;">16%</div></div><div class="card"><div class="stat-lbl">Monthly Goal (May)</div><div class="stat-val run-c" style="font-size:18px;">71.4<span style="font-size:11px;color:#888;">/<span class="goal-val" onclick="event.stopPropagation();editMonthGoal()" title="Click to change goal">80</span> km</span></div><div style="background:#2a2d38;border-radius:4px;height:5px;margin-top:6px;"><div style="background:#e07a30;height:100%;border-radius:4px;width:89%;"></div></div><div class="stat-sub" style="color:#888;">89%</div></div><div class="card"><div class="stat-lbl">Weekly Goal</div><div class="stat-val run-c" style="font-size:18px;">32.5<span style="font-size:11px;color:#888;">/<span class="goal-val" onclick="event.stopPropagation();editWeekGoal()" title="Click to change goal">40</span> km</span></div><div style="background:#2a2d38;border-radius:4px;height:5px;margin-top:6px;"><div style="background:#e07a30;height:100%;border-radius:4px;width:81%;"></div></div><div class="stat-sub" style="color:#888;">81%</div></div><div class="card"><div class="stat-lbl">Fitness Score</div><div class="stat-val pos-c" style="font-size:18px;">78</div><div class="stat-sub"><span class="pos-c">+3</span></div></div></div>
@@ -392,7 +396,21 @@ function toggleLang(){
   lang=lang==='en'?'zh':'en';
   localStorage.setItem('pace_lang',lang);
   renderAll();
+  var ml=document.getElementById('menuLangLabel');
+  if(ml)ml.textContent=t('langSwitch');
 }
+
+// === MENU ===
+function toggleMenu(){
+  var dd=document.getElementById('menuDropdown');
+  dd.style.display=dd.style.display==='none'?'block':'none';
+}
+document.addEventListener('click',function(e){
+  var dd=document.getElementById('menuDropdown');
+  if(dd&&dd.style.display!=='none'&&!e.target.closest('.btn-menu-toggle')&&!e.target.closest('#menuDropdown')){
+    dd.style.display='none';
+  }
+});
 
 // === FILTER ===
 function filteredActs(){return acts;}
