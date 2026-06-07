@@ -1340,7 +1340,7 @@ function utf8ToBase64(str){
 function syncToGitHub(){
   var TOKEN=getGithubToken();
   if(!TOKEN){showToast('未提供 Token，无法同步');return;}
-  var btn=document.querySelector('[onclick="syncToGitHub()"]');
+  var btn=document.querySelector('[onclick*="syncToGitHub"]');
   btn.disabled=true;
   btn.textContent='Syncing...';
   var d={acts:acts,goal:GOAL,month_goal:MONTH_GOAL,week_goal:WEEK_GOAL};
