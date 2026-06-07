@@ -1,0 +1,2 @@
+# This directory holds GPX files for automatic import via GitHub Actions.
+# Upload your .gpx files here and push to trigger auto-parsing.
