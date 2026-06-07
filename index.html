@@ -304,9 +304,9 @@ fetch('data.json').then(function(r){return r.json();}).then(function(data){
   renderAll();
 });
 var ch1=null,ch2=null,ch3=null;
-var GOAL=parseInt(localStorage.getItem('pace_goal'))||500;
-var MONTH_GOAL=parseInt(localStorage.getItem('pace_month_goal'))||80;
-var WEEK_GOAL=parseInt(localStorage.getItem('pace_week_goal'))||40;
+var GOAL=parseInt(localStorage.getItem('pace_goal'))||800;
+var MONTH_GOAL=parseInt(localStorage.getItem('pace_month_goal'))||100;
+var WEEK_GOAL=parseInt(localStorage.getItem('pace_week_goal'))||25;
 var weekRefDate=null; // 点击月历日期时，以此为参考计算该周距离
 var curYear=2026;
 var hmView='year';
