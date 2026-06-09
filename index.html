@@ -1341,9 +1341,9 @@ function utf8ToBase64(str){
 function syncToGitHub(){
   var TOKEN=getGithubToken();
   if(!TOKEN){showToast('未提供 Token，无法同步');return;}
-  var btn=document.querySelector('[onclick="syncToGitHub()"]');
-  btn.disabled=true;
-  btn.textContent='Syncing...';
+  var btn=document.querySelector('[onclick*="syncToGitHub"]');
+  if(btn){btn.style.opacity='0.5';btn.style.pointerEvents='none';}
+  var btnOrigText=btn?btn.querySelector('span:last-child'):null;
   var d={acts:acts,goal:GOAL,month_goal:MONTH_GOAL,week_goal:WEEK_GOAL};
   var jsonStr=JSON.stringify(d,null,2);
   var content=utf8ToBase64(jsonStr);
@@ -1380,8 +1380,7 @@ function syncToGitHub(){
   })
   .then(function(r){return r.json();})
   .then(function(resp){
-    btn.disabled=false;
-    btn.textContent='Sync';
+    if(btn){btn.style.opacity='';btn.style.pointerEvents='';}
     if(resp.content){
       showToast('Sync 成功！GitHub 已更新');
     }else{
@@ -1389,8 +1388,7 @@ function syncToGitHub(){
     }
   })
   .catch(function(e){
-    btn.disabled=false;
-    btn.textContent='Sync';
+    if(btn){btn.style.opacity='';btn.style.pointerEvents='';}
     showToast('Sync 失败: '+(e.message||e));
   });
 }
