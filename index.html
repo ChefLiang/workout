@@ -434,9 +434,9 @@ function fmtPace(p){
   if(s===60){m++;s=0;}
   return m+':'+(s<10?'0':'')+s;
 }
-function fmtTime(min){
-  if(!min&&min!==0)return'--:--:--';
-  var total=Math.round(min*60);
+function fmtTime(min,sec){
+  if(sec!=null&&sec>=0){var total=sec;}
+  else{if(!min&&min!==0)return'--:--:--';var total=Math.round(min*60);}
   var h=Math.floor(total/3600),rm=total%3600,m=Math.floor(rm/60),s=rm%60;
   return h+':'+(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
 }
@@ -511,7 +511,7 @@ function showHMTooltip(cell,dateStr){
   var html='<div class="tt-date">'+dateStr+'</div>';
   dayActs.forEach(function(a){
     if(a.type==='run')html+='<div class="tt-run">'+t('run')+': '+a.dist+' km | '+fmtPace(a.pace)+' /km | HR '+a.hr+'</div>';
-    else html+='<div class="tt-train">'+t('train')+': HR '+a.hr+' bpm | '+fmtTime(a.min)+'</div>';
+    else html+='<div class="tt-train">'+t('train')+': HR '+a.hr+' bpm | '+fmtTime(a.min,a.dur)+'</div>';
   });
   tip.innerHTML=html;tip.style.display='block';
   var app=document.getElementById('app');
@@ -961,8 +961,8 @@ function renderHist(){
       html+='<button class="btn-cancel" onclick="cancelEditA()">'+t('cancel')+'</button></div>';
     }else{
       var info='';
-      if(a.type==='run')info='<span class="run-c">'+a.dist+' km</span> | '+fmtPace(a.pace)+' /km | HR '+a.hr+' | '+fmtTime(a.min);
-      else info='HR '+a.hr+' bpm | '+fmtTime(a.min);
+      if(a.type==='run')info='<span class="run-c">'+a.dist+' km</span> | '+fmtPace(a.pace)+' /km | HR '+a.hr+' | '+fmtTime(a.min,a.dur);
+      else info='HR '+a.hr+' bpm | '+fmtTime(a.min,a.dur);
       var mapBtn=a.gpxPoints&&a.gpxPoints.length?'<button class="btn-map" onclick="showMap('+realIdx+')">'+t('viewMap')+'</button>':'';
       html+='<div class="act-row"><span class="act-type '+(a.type==='run'?'run':'train')+'">'+(a.type==='run'?t('run'):t('training'))+'</span>'+pbBadges+'<span style="font-size:12px;color:#888a95;width:70px;">'+a.date.slice(5)+'</span><span class="act-info">'+info+'</span><span class="act-score '+scC+'">'+sc+'</span>'+mapBtn+'<button class="btn-edit" onclick="editA('+realIdx+')">'+t('edit')+'</button><button class="btn-del" onclick="delA('+realIdx+')">'+t('del')+'</button></div>';
     }
@@ -1109,9 +1109,10 @@ function parseGPX(txt){
   var avgHR=0,hrCount=0;
   points.forEach(function(p){if(p.hr>0){avgHR+=p.hr;hrCount++;}});
   avgHR=hrCount?Math.round(avgHR/hrCount):0;
-  var ds=t0.toISOString().slice(0,10);
+  var ds=t0.getFullYear()+'-'+String(t0.getMonth()+1).padStart(2,'0')+'-'+String(t0.getDate()).padStart(2,'0');
+  var durSec=Math.round((t1-t0)/1000);
   var gpxPoints=points.map(function(p){return{lat:p.lat,lon:p.lon,time:p.time,hr:p.hr,ele:p.ele};});
-  return[{date:ds,type:'run',dist:Math.round(totalDist*10)/10,pace:Math.round(pace*100)/100,hr:avgHR,min:Math.round(durMin),gpxPoints:gpxPoints}];
+  return[{date:ds,type:'run',dist:Math.round(totalDist*100)/100,pace:Math.round(pace*100)/100,hr:avgHR,min:Math.round(durMin),dur:durSec,gpxPoints:gpxPoints}];
 }
 function parseTCX(txt){
   var parser=new DOMParser();
@@ -1199,7 +1200,7 @@ function buildMapForDate(dateStr){
     var endIcon=L.divIcon({className:'',html:'<div style="width:10px;height:10px;background:#e05555;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);"></div>',iconSize:[10,10],iconAnchor:[5,5]});
     L.marker(latlngs[0],{icon:startIcon}).addTo(embedMapInstance);
     L.marker(latlngs[latlngs.length-1],{icon:endIcon}).addTo(embedMapInstance);
-    var infoHtml='<span style="color:#e07a30;font-weight:500;">'+latest.dist+' km</span> &middot; '+fmtPace(latest.pace)+' /km &middot; '+fmtTime(latest.min);
+    var infoHtml='<span style="color:#e07a30;font-weight:500;">'+latest.dist+' km</span> &middot; '+fmtPace(latest.pace)+' /km &middot; '+fmtTime(latest.min,latest.dur);
     if(latest.hr>0)infoHtml+=' &middot; <span style="color:#e05555;">HR '+latest.hr+'</span>';
     infoHtml+=' &middot; <span style="color:#888;">'+latest.date+'</span>';
     document.getElementById('embedMapInfo').innerHTML=infoHtml;
@@ -1228,7 +1229,7 @@ function buildEmbeddedMap(){
     var endIcon=L.divIcon({className:'',html:'<div style="width:10px;height:10px;background:#e05555;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);"></div>',iconSize:[10,10],iconAnchor:[5,5]});
     L.marker(latlngs[0],{icon:startIcon}).addTo(embedMapInstance);
     L.marker(latlngs[latlngs.length-1],{icon:endIcon}).addTo(embedMapInstance);
-    var infoHtml='<span style="color:#e07a30;font-weight:500;">'+latest.dist+' km</span> &middot; '+fmtPace(latest.pace)+' /km &middot; '+fmtTime(latest.min);
+    var infoHtml='<span style="color:#e07a30;font-weight:500;">'+latest.dist+' km</span> &middot; '+fmtPace(latest.pace)+' /km &middot; '+fmtTime(latest.min,latest.dur);
     if(latest.hr>0)infoHtml+=' &middot; <span style="color:#e05555;">HR '+latest.hr+'</span>';
     infoHtml+=' &middot; <span style="color:#888;">'+latest.date+'</span>';
     document.getElementById('embedMapInfo').innerHTML=infoHtml;
@@ -1260,7 +1261,7 @@ function showMap(idx){
     pts.forEach(function(p){if(p.ele>0){maxEle=Math.max(maxEle,p.ele);minEle=Math.min(minEle,p.ele);}});
     if(minEle===Infinity){minEle=0;maxEle=0;}
     var elevStr=maxEle>0?(Math.round(minEle)+'m ~ '+Math.round(maxEle)+'m'):'--';
-    var infoHtml='<span style="color:#e07a30;font-weight:500;">'+a.dist+' km</span> &middot; <span>'+fmtPace(a.pace)+' /km</span> &middot; <span>'+fmtTime(a.min)+'</span>';
+    var infoHtml='<span style="color:#e07a30;font-weight:500;">'+a.dist+' km</span> &middot; <span>'+fmtPace(a.pace)+' /km</span> &middot; <span>'+fmtTime(a.min,a.dur)+'</span>';
     if(a.hr>0)infoHtml+=' &middot; <span style="color:#e05555;">HR '+a.hr+'</span>';
     infoHtml+=' &middot; <span>'+pts.length+' pts</span> &middot; <span>'+elevStr+'</span>';
     infoHtml+='<br><span style="font-size:9px;color:#888;"><span style="display:inline-block;width:8px;height:8px;background:#3ba87a;border-radius:50%;vertical-align:middle;"></span> Start &nbsp; <span style="display:inline-block;width:8px;height:8px;background:#e05555;border-radius:50%;vertical-align:middle;"></span> End</span>';
@@ -1340,7 +1341,7 @@ function utf8ToBase64(str){
 function syncToGitHub(){
   var TOKEN=getGithubToken();
   if(!TOKEN){showToast('未提供 Token，无法同步');return;}
-  var btn=document.querySelector('[onclick*="syncToGitHub"]');
+  var btn=document.querySelector('[onclick="syncToGitHub()"]');
   btn.disabled=true;
   btn.textContent='Syncing...';
   var d={acts:acts,goal:GOAL,month_goal:MONTH_GOAL,week_goal:WEEK_GOAL};
