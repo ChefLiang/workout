@@ -743,9 +743,9 @@ function buildHM(){
   var html='';
   if(hmView==='year'){
     // Build year as 7-row grid (Sun–Sat) grouped by month columns
-    // dayOrder: left-to-right = Sun..Sat rows; dayLabels: show M/W/F only for EN
-    var dayOrder=[6,0,1,2,3,4,5]; // Sun first, Sat last
-    var dayLabels=['','M','','W','','F','']; // indexed by dayOrder position (Sun=0, Mon=1...)
+    // dayOrder: left-to-right = Mon..Sun rows; dayLabels: show M/W/F only for EN
+    var dayOrder=[0,1,2,3,4,5,6]; // Mon first, Sun last
+    var dayLabels=['M','','W','','F','','']; // indexed by dayOrder position (Mon=0, Tue=1...)
     html+='<div style="display:flex;gap:0;align-items:flex-start;"><div class="hm-week-label" style="display:flex;flex-direction:column;gap:1.5px;padding-top:20px;margin-right:3px;">';
     for(var ri=0;ri<7;ri++){
       var lbl=lang==='en'?dayLabels[ri]:DAYS_ZH[dayOrder[ri]].charAt(0);
@@ -754,7 +754,7 @@ function buildHM(){
     html+='</div>';
     html+='<div style="flex:1;overflow-x:auto;"><div class="hm-month-grid">';
     for(var mi=0;mi<12;mi++){
-      var fd2=new Date(curYear,mi,1);var sd2=fd2.getDay();sd2=sd2===0?6:sd2-1;
+      var fd2=new Date(curYear,mi,1);var sd2=fd2.getDay();sd2=sd2===0?6:sd2-1; // Mon=0..Sun=6
       var lastD2=new Date(curYear,mi+1,0);var dim2=lastD2.getDate();var dday=1;
       // Collect weeks for this month
       var monthWeeks=[];
@@ -822,11 +822,12 @@ function buildMonthHM(){
   html+='<div><button onclick="navMonth(-1)">&#8592;</button><button onclick="navMonth(1)">&#8594;</button></div>';
   html+='</div>';
   html+='<div class="month-hm-weekdays">';
-  var dowOrder=[6,0,1,2,3,4,5]; // Sun first
+  var dowOrder=[0,1,2,3,4,5,6]; // Mon first
   dowOrder.forEach(function(di){html+='<span>'+days[di].charAt(0)+'</span>';});
   html+='</div>';
   html+='<div class="month-hm-grid">';
-  for(var e=0;e<startDow;e++)html+='<div class="month-hm-cell"></div>';
+  var startDowMon=startDow===0?6:startDow-1;
+  for(var e=0;e<startDowMon;e++)html+='<div class="month-hm-cell"></div>';
   for(var dd=1;dd<=daysInMonth;dd++){
     var ds3=year+'-'+('0'+(month+1)).slice(-2)+'-'+('0'+dd).slice(-2);
     var inf=dayMap[ds3];
