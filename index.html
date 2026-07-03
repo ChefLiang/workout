@@ -742,50 +742,60 @@ function buildHM(){
   yrActs.forEach(function(a){if(!map[a.date])map[a.date]={run:false,train:false};map[a.date][a.type]=true;});
   var html='';
   if(hmView==='year'){
-    // Build year as 7-row grid (Sun–Sat) grouped by month columns
-    // dayOrder: left-to-right = Mon..Sun rows; dayLabels: show M/W/F only for EN
+    // Build continuous year calendar (no per-month gaps)
     var dayOrder=[0,1,2,3,4,5,6]; // Mon first, Sun last
-    var dayLabels=['M','','W','','F','','']; // indexed by dayOrder position (Mon=0, Tue=1...)
+    var dayLabels=['M','','W','','F','',''];
     html+='<div style="display:flex;gap:0;align-items:flex-start;"><div class="hm-week-label" style="display:flex;flex-direction:column;gap:1.5px;padding-top:20px;margin-right:3px;">';
     for(var ri=0;ri<7;ri++){
       var lbl=lang==='en'?dayLabels[ri]:DAYS_ZH[dayOrder[ri]].charAt(0);
       html+='<span style="height:13px;line-height:13px;font-size:10px;color:#555;width:10px;text-align:right;padding-right:2px;">'+lbl+'</span>';
     }
     html+='</div>';
-    html+='<div style="flex:1;overflow-x:auto;"><div class="hm-month-grid">';
-    for(var mi=0;mi<12;mi++){
-      var fd2=new Date(curYear,mi,1);var sd2=fd2.getDay();sd2=sd2===0?6:sd2-1; // Mon=0..Sun=6
-      var lastD2=new Date(curYear,mi+1,0);var dim2=lastD2.getDate();var dday=1;
-      // Collect weeks for this month
-      var monthWeeks=[];
-      while(dday<=dim2){
-        var w=[];var sow=dday-sd2;
-        for(var dii=0;dii<7;dii++){
-          var cd=sow+dii;var cdate='';
-          if(cd>=1&&cd<=dim2){cdate=curYear+'-'+('0'+(mi+1)).slice(-2)+'-'+('0'+cd).slice(-2);}
-          w.push(cdate);
+    // Build all weeks for the year continuously
+    var jan1=new Date(curYear,0,1);
+    var startOff=jan1.getDay();startOff=startOff===0?6:startOff-1; // Mon=0..Sun=6
+    var totalYearDays=Math.floor((new Date(curYear,11,31)-jan1)/86400000)+1;
+    var yearWeeks=[];
+    var monthStartWeeks=[];for(var mi0=0;mi0<12;mi0++)monthStartWeeks.push(-1);
+    var yn=1;var curOff=startOff;
+    while(yn<=totalYearDays){
+      var w=[];var sow=yn-curOff;
+      for(var dii=0;dii<7;dii++){
+        var cd=sow+dii;var cdate='';
+        if(cd>=1&&cd<=totalYearDays){
+          var dateObj=new Date(curYear,0,cd);
+          var mm2=dateObj.getMonth();var dd2=dateObj.getDate();
+          cdate=curYear+'-'+('0'+(mm2+1)).slice(-2)+'-'+('0'+dd2).slice(-2);
+          if(dd2===1&&monthStartWeeks[mm2]===-1)monthStartWeeks[mm2]=yearWeeks.length;
         }
-        monthWeeks.push(w);dday+=7-sd2;sd2=0;
+        w.push(cdate);
       }
-      // Month label spanning all week columns
-      html+='<div style="flex:0 0 auto;display:flex;flex-direction:column;">';
-      html+='<div class="hm-month-label" style="text-align:left;padding-left:4px;margin-bottom:3px;">'+months[mi]+'</div>';
-      html+='<div style="display:flex;gap:1px;">';
-      monthWeeks.forEach(function(week){
-        html+='<div style="display:flex;flex-direction:column;gap:1.5px;">';
-        for(var ri2=0;ri2<7;ri2++){
-          var ds=week[dayOrder[ri2]];var info=ds&&map[ds]?map[ds]:null;
-          var bg='#252830',bdr='';
-          if(info&&info.run&&info.train){bg='#e07a30';bdr='box-shadow:inset 0 0 0 1.5px #7f77dd;';}
-          else if(info&&info.run)bg='#e07a30';
-          else if(info&&info.train)bg='#7f77dd';
-          var empty=ds?'':'empty';
-          html+='<div class="hm-week-day '+empty+'" style="background:'+bg+';'+bdr+'" '+(ds?'onmouseenter="showHMTooltip(this,\''+ds+'\')" onmouseleave="hideHMTooltip()" onclick="selectDate(\''+ds+'\')"':'')+'></div>';
-        }
-        html+='</div>';
-      });
-      html+='</div></div>';
+      yearWeeks.push(w);yn+=7-curOff;curOff=0;
     }
+    html+='<div style="flex:1;overflow-x:auto;">';
+    // Month label row aligned with week columns
+    html+='<div style="display:flex;gap:1px;margin-bottom:3px;height:16px;overflow:hidden;">';
+    for(var wi=0;wi<yearWeeks.length;wi++){
+      var mlabel='';
+      for(var mi1=0;mi1<12;mi1++){if(monthStartWeeks[mi1]===wi){mlabel=months[mi1];break;}}
+      html+='<span style="width:16px;flex-shrink:0;font-size:10px;color:#888a95;overflow:visible;white-space:nowrap;">'+mlabel+'</span>';
+    }
+    html+='</div>';
+    // Continuous weeks grid
+    html+='<div style="display:flex;gap:1px;">';
+    yearWeeks.forEach(function(week){
+      html+='<div style="display:flex;flex-direction:column;gap:1.5px;">';
+      for(var ri2=0;ri2<7;ri2++){
+        var ds=week[dayOrder[ri2]];var info=ds&&map[ds]?map[ds]:null;
+        var bg='#252830',bdr='';
+        if(info&&info.run&&info.train){bg='#e07a30';bdr='box-shadow:inset 0 0 0 1.5px #7f77dd;';}
+        else if(info&&info.run)bg='#e07a30';
+        else if(info&&info.train)bg='#7f77dd';
+        var empty=ds?'':'empty';
+        html+='<div class="hm-week-day '+empty+'" style="background:'+bg+';'+bdr+'" '+(ds?'onmouseenter="showHMTooltip(this,\''+ds+'\')" onmouseleave="hideHMTooltip()" onclick="selectDate(\''+ds+'\')"':'')+'></div>';
+      }
+      html+='</div>';
+    });
     html+='</div></div></div>';
   }
   document.getElementById('heatmapArea').innerHTML=html;
