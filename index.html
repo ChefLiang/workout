@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 </head><body class=""><div id="app" style="background:#1a1c22;color:#d8dae0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:20px;max-width:1080px;margin:0 auto;font-size:13px;line-height:1.6;position:relative;">
 <style>
@@ -506,7 +506,6 @@ function showMonthVal(el){el.querySelector('.mc-val').style.display='block';el.q
 // === TOOLTIP ===
 function showHMTooltip(cell,dateStr){
   var dayActs=acts.filter(function(a){return a.date===dateStr;});
-  if(!dayActs.length){hideHMTooltip();return;}
   var tip=document.getElementById('hmTooltip');
   var html='<div class="tt-date">'+dateStr+'</div>';
   dayActs.forEach(function(a){
